@@ -1,0 +1,29 @@
+[
+  {
+    "question": "What is overfitting?",
+    "expected_answer": "Overfitting is when a model memorizes training noise and fails to generalize.",
+    "relevant_chunk_ids": ["c1"],
+    "chunks": [
+      {"chunk_id": "c1", "text": "Overfitting occurs when a model memorizes training noise and fails to generalize to new data.", "filename": "ml.pdf", "page_number": 14},
+      {"chunk_id": "c2", "text": "A confusion matrix counts true positives, false positives, true negatives and false negatives.", "filename": "ml.pdf", "page_number": 22}
+    ]
+  },
+  {
+    "question": "How is precision calculated?",
+    "expected_answer": "Precision is TP / (TP + FP).",
+    "relevant_chunk_ids": ["p1"],
+    "chunks": [
+      {"chunk_id": "p1", "text": "Precision = TP / (TP + FP). It asks: of the predicted positives, how many were correct?", "filename": "eval.pdf", "page_number": 3},
+      {"chunk_id": "p2", "text": "Gradient descent updates parameters in the direction of the negative gradient.", "filename": "opt.pdf", "page_number": 8}
+    ]
+  },
+  {
+    "question": "What is a prerequisite for logistic regression?",
+    "expected_answer": "Probability and a linear model with a sigmoid.",
+    "relevant_chunk_ids": ["l1"],
+    "chunks": [
+      {"chunk_id": "l1", "text": "Logistic regression uses a sigmoid of a linear combination of features to estimate class probability.", "filename": "lr.pdf", "page_number": 1},
+      {"chunk_id": "l2", "text": "K-means partitions unlabeled points into k clusters by minimizing within-cluster variance.", "filename": "unsup.pdf", "page_number": 4}
+    ]
+  }
+]
