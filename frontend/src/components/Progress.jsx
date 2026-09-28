@@ -1,24 +1,18 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getProgress } from "../api";
 
-// NAYA: userEmail prop accept kar rahe hain
 function Progress({ userEmail }) {
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (userEmail) {
-      loadProgress();
-    }
-  }, [userEmail]);
+  const loadProgress = useCallback(async () => {
+    if (!userEmail) return;
 
-  async function loadProgress() {
     try {
       setLoading(true);
       setError("");
 
-      // NAYA: Backend ko userEmail bhej rahe hain
       const data = await getProgress(userEmail);
       setProgress(data);
     } catch (err) {
@@ -26,14 +20,47 @@ function Progress({ userEmail }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (!userEmail) return;
+
+    let active = true;
+
+    const loadInitialProgress = async () => {
+      try {
+        const data = await getProgress(userEmail);
+
+        if (active) {
+          setProgress(data);
+          setError("");
+        }
+      } catch (err) {
+        if (active) {
+          setError(err.message || "Failed to load progress.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadInitialProgress();
+
+    return () => {
+      active = false;
+    };
+  }, [userEmail]);
 
   if (loading) {
     return (
       <section className="card progress-card">
         <p className="section-number">05 · YOUR PROGRESS</p>
         <h2>Learning progress</h2>
-        <div className="progress-loading">Loading your progress...</div>
+        <div className="progress-loading">
+          Loading your progress...
+        </div>
       </section>
     );
   }
@@ -44,7 +71,12 @@ function Progress({ userEmail }) {
         <p className="section-number">05 · YOUR PROGRESS</p>
         <h2>Learning progress</h2>
         <div className="error">{error}</div>
-        <button className="retry-button" onClick={loadProgress} type="button">
+
+        <button
+          className="retry-button"
+          onClick={loadProgress}
+          type="button"
+        >
           Try Again
         </button>
       </section>
@@ -60,6 +92,7 @@ function Progress({ userEmail }) {
     <section className="card progress-card">
       <p className="section-number">05 · YOUR PROGRESS</p>
       <h2>Learning progress</h2>
+
       <p className="progress-subtitle">
         Track how consistently you are learning and testing your knowledge.
       </p>
@@ -69,14 +102,17 @@ function Progress({ userEmail }) {
           <span className="progress-stat-label">Topics Learned</span>
           <strong>{totalSessions}</strong>
         </div>
+
         <div className="progress-stat">
           <span className="progress-stat-label">Quiz Attempts</span>
           <strong>{totalQuizAttempts}</strong>
         </div>
+
         <div className="progress-stat">
           <span className="progress-stat-label">Average Score</span>
           <strong>{averageScore}%</strong>
         </div>
+
         <div className="progress-stat">
           <span className="progress-stat-label">Best Score</span>
           <strong>{bestScore}%</strong>
@@ -86,6 +122,7 @@ function Progress({ userEmail }) {
       {progress?.weak_concepts?.length > 0 && (
         <div className="progress-focus">
           <h3>Concepts to revisit</h3>
+
           <div className="weak-result">
             {progress.weak_concepts.map((concept) => (
               <span key={concept}>{concept}</span>
@@ -94,7 +131,11 @@ function Progress({ userEmail }) {
         </div>
       )}
 
-      <button className="retry-button" onClick={loadProgress} type="button">
+      <button
+        className="retry-button"
+        onClick={loadProgress}
+        type="button"
+      >
         Refresh Progress
       </button>
     </section>

@@ -1,24 +1,18 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getHistory } from "../api";
 
-// NAYA: userEmail prop accept kar rahe hain
 function History({ userEmail }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (userEmail) {
-      loadHistory();
-    }
-  }, [userEmail]);
+  const loadHistory = useCallback(async () => {
+    if (!userEmail) return;
 
-  async function loadHistory() {
     try {
       setLoading(true);
       setError("");
 
-      // NAYA: Backend ko userEmail bhej rahe hain
       const data = await getHistory(userEmail, 20);
       setHistory(data.items || []);
     } catch (err) {
@@ -26,14 +20,48 @@ function History({ userEmail }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (!userEmail) return;
+
+    let active = true;
+
+    const loadInitialHistory = async () => {
+      try {
+        const data = await getHistory(userEmail, 20);
+
+        if (active) {
+          setHistory(data.items || []);
+          setError("");
+        }
+      } catch (err) {
+        if (active) {
+          setError(err.message || "Failed to load learning history.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadInitialHistory();
+
+    return () => {
+      active = false;
+    };
+  }, [userEmail]);
 
   function formatDate(value) {
     if (!value) return "";
+
     const date = new Date(value);
+
     if (Number.isNaN(date.getTime())) {
       return "";
     }
+
     return date.toLocaleString();
   }
 
@@ -42,7 +70,9 @@ function History({ userEmail }) {
       <section className="card history-card">
         <p className="section-number">04 · LEARNING HISTORY</p>
         <h2>Your learning history</h2>
-        <div className="history-loading">Loading your previous sessions...</div>
+        <div className="history-loading">
+          Loading your previous sessions...
+        </div>
       </section>
     );
   }
@@ -51,6 +81,7 @@ function History({ userEmail }) {
     <section className="card history-card">
       <p className="section-number">04 · LEARNING HISTORY</p>
       <h2>Your learning history</h2>
+
       <p className="history-subtitle">
         Review the topics you have learned with LearnWise AI.
       </p>
@@ -67,14 +98,19 @@ function History({ userEmail }) {
       {!error && history.length > 0 && (
         <div className="history-list">
           {history.map((item) => (
-            <div className="history-item" key={item.id || item.session_id}>
+            <div
+              className="history-item"
+              key={item.id || item.session_id}
+            >
               <div className="history-item-main">
                 <h3>{item.topic}</h3>
                 <span className="history-mode">{item.mode}</span>
               </div>
 
               {item.created_at && (
-                <p className="history-date">{formatDate(item.created_at)}</p>
+                <p className="history-date">
+                  {formatDate(item.created_at)}
+                </p>
               )}
 
               {item.key_concepts?.length > 0 && (
@@ -89,7 +125,11 @@ function History({ userEmail }) {
         </div>
       )}
 
-      <button className="retry-button" onClick={loadHistory} type="button">
+      <button
+        className="retry-button"
+        onClick={loadHistory}
+        type="button"
+      >
         Refresh History
       </button>
     </section>

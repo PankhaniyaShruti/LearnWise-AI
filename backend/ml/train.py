@@ -35,7 +35,12 @@ def train_and_evaluate(n: int = 1600, seed: int = 7) -> dict:
             ("scaler", StandardScaler()),
             (
                 "clf",
-                LogisticRegression(max_iter=400, class_weight="balanced", random_state=seed),
+                LogisticRegression(
+    solver="lbfgs",
+    max_iter=400,
+    class_weight="balanced",
+    random_state=seed,
+),
             ),
         ]
     )

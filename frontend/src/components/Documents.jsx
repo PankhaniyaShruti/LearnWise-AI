@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
-import { askRag, deleteDocument, listDocuments, uploadDocument } from "../api";
+import { useCallback, useEffect, useState } from "react";
+import {
+  askRag,
+  deleteDocument,
+  listDocuments,
+  uploadDocument,
+} from "../api";
 
 function Documents({ userEmail }) {
   const [docs, setDocs] = useState([]);
@@ -10,33 +15,65 @@ function Documents({ userEmail }) {
   const [answer, setAnswer] = useState(null);
   const [asking, setAsking] = useState(false);
 
-  useEffect(() => {
-    if (userEmail) load();
-  }, [userEmail]);
+  const load = useCallback(async () => {
+    if (!userEmail) return;
 
-  async function load() {
     try {
       setLoading(true);
       setError("");
+
       const data = await listDocuments(userEmail);
       setDocs(data.items || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to load documents.");
     } finally {
       setLoading(false);
     }
-  }
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (!userEmail) return;
+
+    let active = true;
+
+    const loadInitialDocuments = async () => {
+      try {
+        const data = await listDocuments(userEmail);
+
+        if (active) {
+          setDocs(data.items || []);
+          setError("");
+        }
+      } catch (err) {
+        if (active) {
+          setError(err.message || "Failed to load documents.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadInitialDocuments();
+
+    return () => {
+      active = false;
+    };
+  }, [userEmail]);
 
   async function onUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
+
     try {
       setUploading(true);
       setError("");
+
       await uploadDocument(file, userEmail);
       await load();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to upload document.");
     } finally {
       setUploading(false);
       event.target.value = "";
@@ -45,23 +82,27 @@ function Documents({ userEmail }) {
 
   async function remove(id) {
     try {
+      setError("");
       await deleteDocument(id, userEmail);
       await load();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to delete document.");
     }
   }
 
   async function ask(event) {
     event.preventDefault();
+
     if (!question.trim()) return;
+
     try {
       setAsking(true);
       setError("");
+
       const data = await askRag(question.trim(), userEmail);
       setAnswer(data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to answer question.");
     } finally {
       setAsking(false);
     }
@@ -72,20 +113,32 @@ function Documents({ userEmail }) {
       <div className="card">
         <p className="section-number">DOCUMENTS</p>
         <h2>Upload notes, then ask grounded questions</h2>
+
         <p className="quiz-subtitle">
-          PDF or TXT is extracted, chunked, and indexed for you only. Answers cite the retrieved pages.
+          PDF or TXT is extracted, chunked, and indexed for you only. Answers
+          cite the retrieved pages.
         </p>
+
         <label className="upload-label">
-          <input type="file" accept=".pdf,.txt,application/pdf,text/plain" onChange={onUpload} disabled={uploading} />
+          <input
+            type="file"
+            accept=".pdf,.txt,application/pdf,text/plain"
+            onChange={onUpload}
+            disabled={uploading}
+          />
           {uploading ? "Processing…" : "Choose PDF or TXT"}
         </label>
+
         {error && <div className="error">{error}</div>}
+
         {loading ? (
           <div className="history-loading">Loading documents…</div>
         ) : docs.length === 0 ? (
           <div className="history-empty">
             <h3>No documents yet</h3>
-            <p>Upload lecture notes to enable grounded answers with citations.</p>
+            <p>
+              Upload lecture notes to enable grounded answers with citations.
+            </p>
           </div>
         ) : (
           <div className="doc-list">
@@ -93,12 +146,20 @@ function Documents({ userEmail }) {
               <div className="doc-row" key={doc.id}>
                 <div>
                   <strong>{doc.filename}</strong>
+
                   <span className="history-mode">
                     {doc.file_type} · {doc.status} · {doc.size_bytes} bytes
-                    {doc.metadata?.chunk_count ? ` · ${doc.metadata.chunk_count} chunks` : ""}
+                    {doc.metadata?.chunk_count
+                      ? ` · ${doc.metadata.chunk_count} chunks`
+                      : ""}
                   </span>
                 </div>
-                <button type="button" className="mode-button" onClick={() => remove(doc.id)}>
+
+                <button
+                  type="button"
+                  className="mode-button"
+                  onClick={() => remove(doc.id)}
+                >
                   Delete
                 </button>
               </div>
@@ -110,6 +171,7 @@ function Documents({ userEmail }) {
       <div className="card">
         <p className="section-number">GROUNDED ASK</p>
         <h2>Question your notes</h2>
+
         <form className="learn-form" onSubmit={ask}>
           <input
             className="topic-input"
@@ -118,17 +180,30 @@ function Documents({ userEmail }) {
             placeholder="e.g. What does my notes say about overfitting?"
             disabled={asking}
           />
-          <button className="learn-button" type="submit" disabled={asking || !docs.length}>
+
+          <button
+            className="learn-button"
+            type="submit"
+            disabled={asking || !docs.length}
+          >
             {asking ? "Retrieving…" : "Ask from documents"}
           </button>
         </form>
+
         {answer && (
           <div className="tutor-reply">
-            {answer.insufficient && <span className="history-mode">Insufficient source material</span>}
+            {answer.insufficient && (
+              <span className="history-mode">
+                Insufficient source material
+              </span>
+            )}
+
             <p>{answer.answer}</p>
+
             {answer.citations?.length > 0 && (
               <div className="citation-list">
                 <strong>Sources</strong>
+
                 {answer.citations.map((c) => (
                   <div key={c.chunk_id} className="citation">
                     {c.filename}
