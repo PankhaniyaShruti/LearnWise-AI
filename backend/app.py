@@ -11,7 +11,6 @@ from .advanced_ai import (
     generate_flashcards,
     generate_learning_path,
     generate_revision_lesson,
-    generate_study_plan,
     tutor_respond,
 )
 from .config import llm_available, supabase_configured
@@ -37,7 +36,6 @@ from .models import (
     QuizSubmission,
     RagAskRequest,
     RevisionRequest,
-    StudyPlanRequest,
     TutorRequest,
 )
 from .observability.events import list_usage_events
@@ -359,22 +357,7 @@ def learning_path_endpoint(payload: LearningPathRequest):
         raise HTTPException(status_code=500, detail=f"Failed to generate learning path: {error}")
 
 
-@app.post("/api/study-plan")
-def study_plan_endpoint(payload: StudyPlanRequest):
-    try:
-        topics = payload.topics or [payload.exam_name]
-        plan = generate_study_plan(
-            exam_name=payload.exam_name,
-            exam_date=payload.exam_date,
-            daily_minutes=payload.daily_minutes,
-            level=payload.level,
-            topics=topics,
-            user_email=payload.user_email,
-        )
-        return plan
-    except Exception as error:
-        logger.error("Study plan error: %s", error, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate study plan: {error}")
+
 
 
 @app.delete("/api/history")

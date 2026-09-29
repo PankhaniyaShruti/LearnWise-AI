@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
@@ -278,14 +279,37 @@ def generate_study_plan(
     topics: list[str],
     user_email: str | None = None,
 ) -> dict[str, Any]:
+    try:
+        exam_day = date.fromisoformat(exam_date)
+        today = date.today()
+        total_days = max(1, (exam_day - today).days + 1)
+    except ValueError:
+        total_days = 7
+
+    total_days = min(total_days, 120)
+
     system = (
-        "Return ONLY JSON: {\"plan\":[{\"day\":1,\"focus\":\"...\",\"lesson_minutes\":45,\"quiz_minutes\":15,\"notes\":\"...\"}]}. "
-        "Create a practical multi-day plan."
+        "Return ONLY valid JSON with this structure: "
+        "{\"plan\":[{\"day\":1,\"focus\":\"...\","
+        "\"lesson_minutes\":45,\"quiz_minutes\":15,\"notes\":\"...\"}]}. "
+        "Create a complete personalized study plan. "
+        "The plan MUST contain exactly the requested number of days. "
+        "Use sequential day numbers starting from 1. "
+        "Distribute all topics across the full duration. "
+        "Include learning, practice, revision, and mock tests where appropriate. "
+        "Do not stop after 7 days unless the requested duration is 7 days. "
+        "Keep lesson_minutes plus quiz_minutes within the daily study budget."
     )
+
     user = (
-        f"Exam: {exam_name}\nDate: {exam_date}\nDaily study minutes: {daily_minutes}\n"
-        f"Level: {level}\nTopics: {', '.join(topics)}\n"
-        "Plan day-by-day using the daily time budget."
+        f"Exam: {exam_name}\n"
+        f"Exam date: {exam_date}\n"
+        f"Total plan duration: exactly {total_days} days\n"
+        f"Daily study budget: {daily_minutes} minutes\n"
+        f"Level: {level}\n"
+        f"Topics: {', '.join(topics)}\n"
+        f"Generate exactly {total_days} plan entries, numbered Day 1 to Day {total_days}. "
+        "Cover the syllabus progressively and reserve suitable time for revision."
     )
     parsed = _complete_json(
         system,

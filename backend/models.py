@@ -231,13 +231,7 @@ class LearningPathRequest(BaseModel):
     user_email: str = Field(default="guest@learnwise.com")
 
 
-class StudyPlanRequest(BaseModel):
-    exam_name: str = Field(..., min_length=1)
-    exam_date: str = Field(..., min_length=1)
-    daily_minutes: int = Field(default=60, ge=15, le=480)
-    level: str = Field(default="beginner")
-    topics: list[str] = Field(default_factory=list)
-    user_email: str = Field(default="guest@learnwise.com")
+
 
 
 class RagAskRequest(BaseModel):

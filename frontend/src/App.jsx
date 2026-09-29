@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase, supabaseConfigured } from "./supabase";
-import { generateLearningPath, generateStudyPlan, learnTopic } from "./api";
+import { generateLearningPath, learnTopic } from "./api";
 
 import Agent from "./components/Agent";
 import Dashboard from "./components/Dashboard";
@@ -388,13 +388,6 @@ function AdvancedTools({ userEmail }) {
   const [path, setPath] = useState(null);
   const [pathLoading, setPathLoading] = useState(false);
   const [pathError, setPathError] = useState("");
-  const [examName, setExamName] = useState("");
-  const [examDate, setExamDate] = useState("");
-  const [dailyMinutes, setDailyMinutes] = useState(60);
-  const [examTopics, setExamTopics] = useState("");
-  const [plan, setPlan] = useState(null);
-  const [planLoading, setPlanLoading] = useState(false);
-  const [planError, setPlanError] = useState("");
 
   async function buildPath(e) {
     e.preventDefault();
@@ -407,33 +400,6 @@ function AdvancedTools({ userEmail }) {
       setPathError(err.message);
     } finally {
       setPathLoading(false);
-    }
-  }
-
-  async function buildPlan(e) {
-    e.preventDefault();
-    if (!examName.trim()) return;
-    try {
-      setPlanLoading(true);
-      setPlanError("");
-      const topics = examTopics
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-      setPlan(
-        await generateStudyPlan({
-          exam_name: examName.trim(),
-          exam_date: examDate || "TBD",
-          daily_minutes: Number(dailyMinutes) || 60,
-          level: "beginner",
-          topics,
-          user_email: userEmail,
-        })
-      );
-    } catch (err) {
-      setPlanError(err.message);
-    } finally {
-      setPlanLoading(false);
     }
   }
 
@@ -466,48 +432,7 @@ function AdvancedTools({ userEmail }) {
             </ol>
           )}
         </div>
-        <div className="card">
-          <p className="section-number">EXAM MODE</p>
-          <h2>Personalized study plan</h2>
-          <form onSubmit={buildPlan} className="exam-form">
-            <input className="login-input" placeholder="Exam name" value={examName} onChange={(e) => setExamName(e.target.value)} />
-            <input className="login-input" type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
-            <input
-              className="login-input"
-              type="number"
-              min={15}
-              max={480}
-              value={dailyMinutes}
-              onChange={(e) => setDailyMinutes(e.target.value)}
-              placeholder="Daily minutes"
-            />
-            <input
-              className="login-input"
-              placeholder="Topics (comma-separated)"
-              value={examTopics}
-              onChange={(e) => setExamTopics(e.target.value)}
-            />
-            <button className="learn-button" type="submit" disabled={planLoading}>
-              {planLoading ? "Planning…" : "Generate plan"}
-            </button>
-          </form>
-          {planError && <div className="error">{planError}</div>}
-          {plan?.plan?.length > 0 && (
-            <div className="path-list">
-              {plan.plan.map((day, i) => (
-                <div key={i} className="history-item">
-                  <strong>
-                    Day {day.day}: {day.focus}
-                  </strong>
-                  <p>
-                    Lesson {day.lesson_minutes || "—"} min · Quiz {day.quiz_minutes || "—"} min
-                  </p>
-                  {day.notes && <p>{day.notes}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+
       </div>
     </section>
   );
