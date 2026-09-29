@@ -377,24 +377,170 @@ button:not(:disabled):active {
   background: var(--paper-light);
   border-radius: var(--radius-lg);
   margin-top: 32px;
-  padding: 24px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
 }
 
-.recommend-banner h3 {
+.recommend-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.recommend-kind {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.recommend-banner .recommend-title {
   font-family: var(--serif);
-  margin: 0 0 8px;
+  font-size: clamp(25px, 4vw, 36px);
+  line-height: 1.15;
+  font-weight: 400;
+  margin: 22px 0 18px;
+}
+
+.recommend-focus {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  background: var(--paper);
+}
+
+.recommend-focus span,
+.recommend-exam span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.recommend-focus strong {
+  font-family: var(--serif);
+  font-size: 20px;
   font-weight: 400;
 }
 
-.recommend-banner p,
-.recommend-banner li {
-  color: var(--muted);
-  line-height: 1.6;
+.recommend-banner .recommend-action {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+
+.recommend-why,
+.recommend-plan {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.recommend-why strong,
+.recommend-plan > strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.recommend-banner .recommend-why p {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 .recommend-banner ol {
-  margin: 8px 0 0;
-  padding-left: 18px;
+  margin: 12px 0 0;
+  padding-left: 22px;
+}
+
+.recommend-banner li {
+  padding-left: 5px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.recommend-exam {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.recommend-exam strong {
+  font-size: 13px;
+}
+
+.recommend-loading {
+  color: var(--muted);
+  margin: 18px 0 0;
+  animation: recommend-pulse 1.4s ease-in-out infinite;
+}
+
+.recommend-error {
+  border-color: var(--line);
+}
+
+.recommend-retry {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.recommend-retry:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.recommend-retry:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@keyframes recommend-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 600px) {
+  .recommend-banner {
+    padding: 20px;
+    margin-top: 24px;
+  }
+
+  .recommend-topline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .recommend-exam {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 .learning-box {
