@@ -40,3 +40,107 @@ def test_prerequisite_gap_wins():
     )
     assert rec["kind"] == "prerequisite"
     assert "Probability" in rec["action"]
+
+def test_rag_practice_requires_ready_document():
+
+    rec = recommend_next_action(
+        mastery={
+            "total_concepts": 2,
+            "overall_mastery": 50,
+            "weak_concepts": [
+                {"concept": "Neural Networks", "mastery_score": 40}
+            ],
+            "critical_concepts": [],
+            "due_for_review": [],
+            "concepts": [
+                {"concept": "Neural Networks", "mastery_score": 40}
+            ],
+        },
+        progress={},
+        documents=[
+            {"id": "doc-1", "status": "processing"}
+        ],
+    )
+
+    assert rec["kind"] != "rag_practice"
+    assert rec["documents_available"] == 0
+
+
+def test_rag_practice_with_ready_document():
+
+    rec = recommend_next_action(
+        mastery={
+            "total_concepts": 2,
+            "overall_mastery": 50,
+            "weak_concepts": [
+                {"concept": "Neural Networks", "mastery_score": 40}
+            ],
+            "critical_concepts": [],
+            "due_for_review": [],
+            "concepts": [
+                {"concept": "Neural Networks", "mastery_score": 40}
+            ],
+        },
+        progress={},
+        documents=[
+            {"id": "doc-1", "status": "ready"}
+        ],
+    )
+
+    assert rec["kind"] == "rag_practice"
+    assert rec["documents_available"] == 1
+    assert "Neural Networks" in rec["action"]
+
+def test_ml_weak_prediction_influences_recommendation():
+    rec = recommend_next_action(
+        mastery={
+            "total_concepts": 3,
+            "overall_mastery": 65,
+            "weak_concepts": [],
+            "critical_concepts": [],
+            "due_for_review": [],
+            "concepts": [
+                {"concept": "Python Basics", "mastery_score": 20},
+                {"concept": "Neural Networks", "mastery_score": 80},
+            ],
+        },
+        progress={},
+        ml_predictions=[
+            {
+                "concept": "Neural Networks",
+                "predicted_label": "Needs Attention",
+            }
+        ],
+    )
+
+    assert rec["focus_concept"] == "Neural Networks"
+    assert rec["kind"] == "default"
+    assert "Neural Networks" in rec["action"]
+
+def test_exam_recommendation_for_near_exam():
+    from datetime import datetime, timedelta, timezone
+
+    exam_date = (
+        datetime.now(timezone.utc) + timedelta(days=5)
+    ).isoformat()
+
+    rec = recommend_next_action(
+        mastery={
+            "total_concepts": 2,
+            "overall_mastery": 55,
+            "weak_concepts": [
+                {"concept": "Machine Learning", "mastery_score": 35}
+            ],
+            "critical_concepts": [],
+            "due_for_review": [],
+            "concepts": [
+                {"concept": "Machine Learning", "mastery_score": 35}
+            ],
+        },
+        progress={},
+        exam_date=exam_date,
+    )
+
+    assert rec["kind"] == "exam"
+    assert rec["focus_concept"] == "Machine Learning"
+    assert rec["exam_days_remaining"] <= 5
