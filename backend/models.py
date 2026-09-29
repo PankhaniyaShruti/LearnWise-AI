@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import Literal
 
 
 LEARNING_MODES = {
@@ -12,36 +13,130 @@ LEARNING_MODES = {
 
 
 class QuizQuestion(BaseModel):
-    question: str = Field(..., min_length=1, description="The diagnostic multiple choice question")
-    options: list[str] = Field(..., min_length=4, max_length=4, description="Exactly 4 options")
-    correct_answer: str = Field(..., min_length=1, description="The correct option")
-    concept_tested: str = Field(..., min_length=1, description="The exact key concept tested")
+    question: str = Field(
+        ...,
+        min_length=1,
+        description="The multiple choice question",
+    )
+    options: list[str] = Field(
+        ...,
+        min_length=4,
+        max_length=4,
+        description="Exactly 4 unique options",
+    )
+    correct_answer: str = Field(
+        ...,
+        min_length=1,
+        description="The correct option",
+    )
+    concept_tested: str = Field(
+        ...,
+        min_length=1,
+        description="The exact key concept tested",
+    )
+    difficulty: Literal["easy", "medium", "hard"] = "medium"
+    explanation: str = Field(
+        default="",
+        description="Explanation of why the correct answer is right",
+    )
+
+    @field_validator("question", "correct_answer", "concept_tested")
+    @classmethod
+    def strip_required_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("This field cannot contain only whitespace.")
+        return value
+
+    @field_validator("options")
+    @classmethod
+    def validate_options(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+
+        if any(not value for value in cleaned):
+            raise ValueError("Quiz options cannot be empty.")
+
+        normalized = [value.casefold() for value in cleaned]
+
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("Quiz options must be unique.")
+
+        return cleaned
+
+    @field_validator("explanation")
+    @classmethod
+    def normalize_explanation(cls, value: str) -> str:
+        return value.strip()
 
     @model_validator(mode="after")
     def check_correct_answer(self):
         if self.correct_answer not in self.options:
             raise ValueError(
-                f"correct_answer '{self.correct_answer}' must be one of the options."
+                "correct_answer must exactly match one of the options."
             )
         return self
 
 
 class LearnResponse(BaseModel):
-    explanation: str = Field(..., min_length=1, description="Complete teaching explanation")
-    key_concepts: list[str] = Field(..., min_length=3, max_length=3, description="Exactly 3 key concepts")
-    quiz: list[QuizQuestion] = Field(..., min_length=3, max_length=3, description="Exactly 3 quiz questions")
+    explanation: str = Field(
+        ...,
+        min_length=1,
+        description="Complete teaching explanation",
+    )
+    key_concepts: list[str] = Field(
+        ...,
+        min_length=3,
+        max_length=3,
+        description="Exactly 3 distinct key concepts",
+    )
+    quiz: list[QuizQuestion] = Field(
+        ...,
+        min_length=3,
+        max_length=15,
+        description="Topic-appropriate quiz questions",
+    )
+
+    @field_validator("explanation")
+    @classmethod
+    def validate_explanation(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Explanation cannot contain only whitespace.")
+        return value
+
+    @field_validator("key_concepts")
+    @classmethod
+    def validate_key_concepts(cls, concepts: list[str]) -> list[str]:
+        cleaned = [concept.strip() for concept in concepts]
+
+        if any(not concept for concept in cleaned):
+            raise ValueError("Key concepts cannot be empty.")
+
+        normalized = [concept.casefold() for concept in cleaned]
+
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("Key concepts must be distinct.")
+
+        return cleaned
 
     @model_validator(mode="after")
     def check_concepts_match(self):
         concepts = set(self.key_concepts)
+
         for index, question in enumerate(self.quiz):
             if question.concept_tested not in concepts:
                 raise ValueError(
-                    f"Question {index + 1} tests '{question.concept_tested}', which is not in key_concepts."
+                    f"Question {index + 1} tests "
+                    f"'{question.concept_tested}', which is not in key_concepts."
                 )
-        tested = [question.concept_tested for question in self.quiz]
-        if len(set(tested)) != 3:
-            raise ValueError("Each quiz question must test a different key concept.")
+
+        tested = {question.concept_tested for question in self.quiz}
+
+        if tested != concepts:
+            raise ValueError(
+                "Every key concept must be tested by at least one question."
+            )
+
         return self
 
 
@@ -63,7 +158,9 @@ class LearnRequest(BaseModel):
     def validate_mode(cls, value: str) -> str:
         value = value.strip().lower()
         if value not in LEARNING_MODES:
-            raise ValueError("Mode must be one of: " + ", ".join(sorted(LEARNING_MODES)))
+            raise ValueError(
+                "Mode must be one of: " + ", ".join(sorted(LEARNING_MODES))
+            )
         return value
 
 

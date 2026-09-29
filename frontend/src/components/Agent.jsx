@@ -71,7 +71,7 @@ function Agent({ userEmail, topic }) {
             )}
             {result.results?.planner?.plan?.length > 0 && (
               <div className="path-list">
-                {result.results.planner.plan.slice(0, 5).map((day, i) => (
+                {result.results.planner.plan.map((day, i) => (
                   <div key={i} className="history-item">
                     <strong>
                       Day {day.day}: {day.focus}

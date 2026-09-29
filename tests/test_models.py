@@ -23,35 +23,34 @@ def test_learn_request_mode_validation():
 
 
 def test_learn_response_concept_mapping():
+    concepts = ["A", "B", "C"]
+
+    quiz = [
+        {
+            "question": f"Q{i + 1}",
+            "options": ["A1", "A2", "A3", "A4"],
+            "correct_answer": "A1",
+            "concept_tested": concepts[i % 3],
+            "difficulty": ["easy", "medium", "hard"][i % 3],
+            "explanation": f"Explanation for question {i + 1}.",
+        }
+        for i in range(10)
+    ]
+
     payload = {
         "explanation": "A complete explanation of the topic with enough text.",
-        "key_concepts": ["A", "B", "C"],
-        "quiz": [
-            {
-                "question": "Q1",
-                "options": ["A1", "A2", "A3", "A4"],
-                "correct_answer": "A1",
-                "concept_tested": "A",
-            },
-            {
-                "question": "Q2",
-                "options": ["B1", "B2", "B3", "B4"],
-                "correct_answer": "B2",
-                "concept_tested": "B",
-            },
-            {
-                "question": "Q3",
-                "options": ["C1", "C2", "C3", "C4"],
-                "correct_answer": "C3",
-                "concept_tested": "C",
-            },
-        ],
+        "key_concepts": concepts,
+        "quiz": quiz,
     }
-    LearnResponse(**payload)
-    payload["quiz"][2]["concept_tested"] = "A"
+
+    response = LearnResponse(**payload)
+
+    assert len(response.quiz) == 10
+    assert {question.concept_tested for question in response.quiz} == set(concepts)
+
+    payload["quiz"][9]["concept_tested"] = "Unknown"
     with pytest.raises(ValidationError):
         LearnResponse(**payload)
-
 
 def test_quiz_submission_shape():
     QuizSubmission(

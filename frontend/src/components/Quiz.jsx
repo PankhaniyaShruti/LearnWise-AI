@@ -61,7 +61,12 @@ function Quiz({ quiz, sessionId, userEmail }) {
 
         return (
           <div className="question" key={questionIndex}>
-            <div className="question-label">Question {questionIndex + 1}</div>
+            <div className="question-heading">
+  <div className="question-label">Question {questionIndex + 1}</div>
+  <span className={`difficulty-badge ${(question.difficulty || "medium").toLowerCase()}`}>
+    {question.difficulty || "Medium"}
+  </span>
+</div>
             <h3>{question.question}</h3>
 
             <div className="options">
@@ -91,10 +96,18 @@ function Quiz({ quiz, sessionId, userEmail }) {
             </div>
 
             {result && (
-              <p className="answer">
-                Correct answer: <strong>{question.correct_answer}</strong>
-              </p>
-            )}
+  <div className="answer-feedback">
+    <p className="answer">
+      Correct answer: <strong>{question.correct_answer}</strong>
+    </p>
+
+    {question.explanation && (
+      <p className="answer-explanation">
+        <strong>Why?</strong> {question.explanation}
+      </p>
+    )}
+  </div>
+)}
           </div>
         );
       })}

@@ -9,26 +9,38 @@ logger = logging.getLogger(__name__)
 
 LEARN_SYSTEM = (
     "You are LearnWise AI, an expert educational tutor. "
-    "Return ONLY one valid JSON object and nothing else. "
-    "Do not use markdown. Do not use code fences. "
-    "Do not write anything before or after the JSON. "
-    "The JSON MUST contain exactly these three top-level keys: "
-    "explanation (string), key_concepts (array of exactly 3 strings), "
-    "quiz (array of exactly 3 objects). "
-    "Each quiz object MUST have: question, options (exactly 4 strings), "
-    "correct_answer (exact match to one option), concept_tested "
-    "(exact match to one key_concepts value). "
-    "Each key concept must be tested by exactly one quiz question."
+    "Your goal is to create accurate, beginner-friendly lessons and reliable quizzes. "
+    "Prioritize educational value, clarity, and correctness over length. "
+    "Adapt explanation depth to the topic and selected learning mode. "
+    "Do not add filler or repeat information merely to increase length. "
+    "Generate a topic-appropriate number of quiz questions without forcing a fixed count. "
+    "Every question must have exactly four options and one unambiguous correct answer. "
+    "The correct answer must exactly match one option. "
+    "Every question must test a supplied key concept and be supported by the lesson. "
+    "Avoid duplicate questions, ambiguous wording, and multiple reasonably correct options. "
+    "Use easy, medium, or hard difficulty appropriately. "
+    "Return ONLY one valid JSON object matching the supplied schema. "
+    "Do not use Markdown outside the JSON."
 )
 
 
-def generate_lesson(topic: str, mode: str, user_email: str | None = None) -> dict:
-    logger.info("Generating lesson -> topic='%s', mode='%s'", topic, mode)
-    prompt = get_learn_prompt(topic=topic, mode=mode)
-    _result, validated = complete(
-        [
-            {"role": "system", "content": LEARN_SYSTEM},
-            {"role": "user", "content": prompt},
+def generate_lesson(
+    topic: str,
+    mode: str = "simple",
+    user_email: str | None = None,
+) -> dict:
+    prompt = get_learn_prompt(topic, mode)
+
+    result, validated = complete(
+        messages=[
+            {
+                "role": "system",
+                "content": LEARN_SYSTEM,
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
         ],
         feature="learn",
         prompt_name="learn",
@@ -36,8 +48,16 @@ def generate_lesson(topic: str, mode: str, user_email: str | None = None) -> dic
         user_email=user_email,
         task="learn",
         temperature=0.2,
-        max_tokens=2500,
+        max_tokens=4500,
         schema=LearnResponse,
     )
-    logger.info("Lesson successfully validated.")
+
+    logger.info(
+        "Lesson generated topic=%s mode=%s model=%s total_tokens=%s",
+        topic,
+        mode,
+        result.model,
+        result.total_tokens,
+    )
+
     return validated.model_dump()

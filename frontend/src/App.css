@@ -769,6 +769,72 @@ button:not(:disabled):active {
   text-transform: uppercase;
 }
 
+.question-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.question-heading .question-label {
+  margin-bottom: 0;
+}
+
+.difficulty-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.difficulty-badge.easy {
+  background: #e5f5e9;
+  color: #237a42;
+}
+
+.difficulty-badge.medium {
+  background: #fff2d6;
+  color: #946200;
+}
+
+.difficulty-badge.hard {
+  background: #fde7e7;
+  color: #b42318;
+}
+
+.answer-feedback {
+  margin-top: 16px;
+  padding: 15px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.answer-feedback .answer {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.answer-explanation {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.answer-explanation strong {
+  color: var(--ink);
+}
+
 .question h3 {
   font-size: 18px;
   margin: 0 0 15px;
