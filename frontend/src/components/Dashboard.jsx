@@ -151,7 +151,7 @@ function Dashboard({ userEmail, onOpenLesson }) {
 
       {error && <div className="error">{error}</div>}
 
-      <div className="progress-grid">
+      <div className="progress-grid dashboard-stats-grid">
         <div className="progress-stat">
           <span className="progress-stat-label">Overall Mastery</span>
           <strong>{mastery.overall_mastery ?? 0}%</strong>

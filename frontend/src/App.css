@@ -1306,3 +1306,56 @@ button:not(:disabled):active {
     transition: none !important;
   }
 }
+
+/* Dashboard V2 — Statistics */
+.dashboard-stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dashboard-stats-grid .progress-stat {
+  min-width: 0;
+  text-align: left;
+  padding: 20px;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.dashboard-stats-grid .progress-stat:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.dashboard-stats-grid .progress-stat-label {
+  line-height: 1.5;
+}
+
+.dashboard-stats-grid .progress-stat strong {
+  display: block;
+  font-size: clamp(25px, 3vw, 34px);
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-stats-grid .progress-stat {
+    padding: 15px;
+  }
+
+  .dashboard-stats-grid .progress-stat strong {
+    font-size: 25px;
+  }
+}
