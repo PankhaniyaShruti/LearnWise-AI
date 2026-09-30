@@ -9,13 +9,30 @@ from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv(), override=True)
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = Path(os.getenv("DATA_DIR", str(ROOT_DIR / "data")))
+
+IS_VERCEL = bool(os.getenv("VERCEL"))
+
+DEFAULT_DATA_DIR = (
+    Path("/tmp/learnwise-data")
+    if IS_VERCEL
+    else ROOT_DIR / "data"
+)
+
+DATA_DIR = Path(os.getenv("DATA_DIR") or DEFAULT_DATA_DIR)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-DATABASE_PATH = Path(os.getenv("DATABASE_PATH", str(DATA_DIR / "learnwise.db")))
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(DATA_DIR / "uploads")))
+DATABASE_PATH = Path(os.getenv("DATABASE_PATH") or (DATA_DIR / "learnwise.db"))
+
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR") or (DATA_DIR / "uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-ML_ARTIFACT_DIR = Path(os.getenv("ML_ARTIFACT_DIR", str(ROOT_DIR / "backend" / "ml" / "artifacts")))
+
+DEFAULT_ML_ARTIFACT_DIR = (
+    Path("/tmp/learnwise-artifacts")
+    if IS_VERCEL
+    else ROOT_DIR / "backend" / "ml" / "artifacts"
+)
+
+ML_ARTIFACT_DIR = Path(os.getenv("ML_ARTIFACT_DIR") or DEFAULT_ML_ARTIFACT_DIR)
 ML_ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
 GROQ_API_KEY = (os.getenv("GROQ_API_KEY") or "").strip()
