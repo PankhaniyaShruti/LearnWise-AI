@@ -1,5 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
+from fastapi.responses import FileResponse
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -493,3 +495,24 @@ def eval_summary():
             "citation_policy": "Only retrieved chunk ids may be cited.",
         },
     }
+
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def serve_frontend(full_path: str):
+    if full_path == "api" or full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+
+    index_file = FRONTEND_DIST / "index.html"
+
+    requested_file = (FRONTEND_DIST / full_path).resolve()
+    dist_root = FRONTEND_DIST.resolve()
+
+    if requested_file != dist_root and dist_root not in requested_file.parents:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    if requested_file.is_file():
+        return FileResponse(requested_file)
+
+    return FileResponse(index_file)
