@@ -32,8 +32,10 @@ function getOrCreateGuestEmail() {
 
 function App() {
   const [session, setSession] = useState(null);
-  const [guestMode, setGuestMode] = useState(!supabaseConfigured);
-  const [guestEmail, setGuestEmail] = useState(() => (!supabaseConfigured ? getOrCreateGuestEmail() : ""));
+  const [guestMode, setGuestMode] = useState(
+  () => localStorage.getItem("learnwise_guest_active") === "true"
+);
+const [guestEmail, setGuestEmail] = useState(() => getOrCreateGuestEmail());
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -107,24 +109,32 @@ function App() {
   }
 
   async function handleSignOut() {
+  setLesson(null);
+
+  if (supabaseConfigured) {
+    const { error: err } = await supabase.auth.signOut();
+    if (err) {
+      setAuthError(err.message);
+      return;
+    }
+  } else {
+    localStorage.removeItem("learnwise_guest_active");
     setGuestMode(false);
     setGuestEmail("");
-    setLesson(null);
-    if (supabaseConfigured) await supabase.auth.signOut();
-    if (!supabaseConfigured) {
-      setGuestEmail(getOrCreateGuestEmail());
-      setGuestMode(true);
-    }
   }
+}
 
   function continueAsGuest() {
-    const ge = getOrCreateGuestEmail();
-    setGuestEmail(ge);
-    setGuestMode(true);
-    setAuthError("");
-    setAuthMessage("");
-    setLesson(null);
-  }
+  const ge = getOrCreateGuestEmail();
+
+  localStorage.setItem("learnwise_guest_active", "true");
+
+  setGuestEmail(ge);
+  setGuestMode(true);
+  setAuthError("");
+  setAuthMessage("");
+  setLesson(null);
+}
 
   async function handleLearn(event) {
     event.preventDefault();
@@ -153,7 +163,7 @@ function App() {
     }
   }
 
-  const isAuthenticated = Boolean(session) || guestMode;
+ const isAuthenticated = true;
 
   if (!isAuthenticated) {
     return (
@@ -256,14 +266,10 @@ function App() {
             ))}
           </nav>
           <div className="topbar-right">
-            <span title={userEmail}>{guestMode ? "Guest" : userEmail}</span>
-            <button className="theme-toggle" onClick={toggleTheme} type="button">
-              {theme === "light" ? "Dark Mode" : "Light Mode"}
-            </button>
-            <button className="theme-toggle danger" onClick={handleSignOut} type="button">
-              {guestMode ? "Exit Guest" : "Log Out"}
-            </button>
-          </div>
+  <button className="theme-toggle" onClick={toggleTheme} type="button">
+    {theme === "light" ? "Dark Mode" : "Light Mode"}
+  </button>
+</div>
         </div>
       </header>
 
