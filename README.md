@@ -12,7 +12,7 @@ The v4 upgrade keeps every original learning flow and adds real document RAG, an
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for diagrams.
 
-Layers: React UI → FastAPI → LLM gateway → Groq (or xAI fallback) / SQLite or Supabase / TF-IDF RAG / sklearn mastery model.
+Layers: React UI → FastAPI → LLM gateway → Groq (or xAI fallback) / SQLite demo storage / TF-IDF RAG / sklearn mastery model.
 
 ## 3. Features
 
@@ -27,7 +27,6 @@ Layers: React UI → FastAPI → LLM gateway → Groq (or xAI fallback) / SQLite
 | ML mastery | Logistic regression on synthetic bootstrap data + rule baseline |
 | LLM eval | Retrieval hit@1 / MRR on a bundled set; structured-output tests |
 | LLMOps | usage_events: model, prompt version, latency, tokens, success, RAG stats |
-| DevOps | Dockerfiles, compose, GitHub Actions CI |
 
 No UI control is decorative. If a button is visible, it calls a backend path.
 
@@ -36,7 +35,7 @@ No UI control is decorative. If a button is visible, it calls a backend path.
 - Frontend: React 19 + Vite
 - Backend: Python 3.10+ (3.12 target) + FastAPI + Pydantic v2
 - LLM: Groq (`openai/gpt-oss-20b` default) with optional xAI fallback
-- Persistence: Supabase Postgres **or** local SQLite demo
+- Persistence: local SQLite demo
 - ML: scikit-learn Logistic Regression
 - RAG: pypdf + TF-IDF cosine similarity
 
@@ -85,20 +84,9 @@ Seeded concepts (Machine Learning → Supervised Learning → Classification →
 
 Training script, joblib artifact path, metrics JSON, and tests that retrain on a tiny synthetic set. First prediction trains the model if the artifact is missing.
 
-## 11. DevOps
+## 11. Database
 
-- `Dockerfile.backend` / `Dockerfile.frontend`
-- `docker-compose.yml`
-- `.github/workflows/ci.yml` — pip install, compile, pytest, npm ci, frontend build
-- `.gitignore` excludes secrets, `node_modules`, venv, caches
-
-## 12. Database
-
-`database/schema.sql` is the production Supabase schema (sessions, quiz_results, concept_mastery, documents, document_chunks, kg_*, usage_events, learner_predictions, prompt_versions).
-
-**Local/demo:** leave Supabase unset. SQLite is created automatically.
-
-**Production:** run `schema.sql` in the Supabase SQL editor. RLS is enabled; demo policies are permissive and must be tightened (scope by `auth.jwt()->>'email'`) before multi-tenant production. The API still filters by `user_email` on every query.
+The app uses SQLite demo storage. Data persistence depends on the deployment environment; the Vercel demo uses temporary writable storage.
 
 ## 13. Environment variables
 
@@ -110,12 +98,10 @@ Copy `.env.example`. Never commit `.env`.
 | `XAI_API_KEY` | fallback | Alternate LLM |
 | `LLM_PROVIDER` | no | `auto` / `groq` / `xai` |
 | `GROQ_MODEL*` | no | Model routing |
-| `SUPABASE_URL` / `SUPABASE_KEY` | no | Production DB |
-| `VITE_SUPABASE_URL` / `VITE_SUPABASE_KEY` | no | Frontend auth |
 | `VITE_API_BASE_URL` | no | Empty = same-origin / Vite proxy |
 | `DATABASE_PATH` | no | SQLite path |
 
-Missing LLM keys fail at call time with a clear error. Missing Supabase falls back to SQLite. Missing frontend Supabase keys enable guest mode.
+Missing LLM keys fail at call time with a clear error. The app supports guest mode.
 
 ## 14. Windows setup
 
@@ -171,37 +157,15 @@ python -m backend.ml.train
 
 LLM live calls are not required for the unit/API tests (the gateway is not invoked except where retrieval short-circuits). End-to-end lesson generation needs `GROQ_API_KEY` or `XAI_API_KEY`.
 
-## 17. Docker usage
+## 16. Deployment guidance
 
-```bash
-docker compose up --build
-```
-
-Backend: http://localhost:8000  Frontend: http://localhost:5173
-
-Pass keys via environment or an untracked `.env`.
-
-## 18. Deployment guidance
-
-- Run `database/schema.sql` on Supabase.
-- Set Groq + Supabase secrets on the host; never bake them into images.
-- Put the API behind HTTPS; keep CORS tight in production (compose demo allows `*`).
-- Replace permissive RLS with email-scoped policies.
+- Set the Groq or xAI API key in the deployment environment; never commit secrets.
 - Frontend `VITE_*` values are build-time. Rebuild after changing them.
 - Use a process manager or container restart policy for uvicorn.
 
-## 19. Security considerations
-
-- Document bytes and text are untrusted. RAG wrapping forbids instruction-following from sources.
-- Ownership checks on sessions, quiz submit, documents, chunks, and observability.
-- Upload allow-list: `.pdf` / `.txt` only, size cap, sanitized filenames.
-- No secrets in the repo. Guest identity is browser-local, not multi-user security.
-- Observability does not persist prompts or document bodies.
-
-## 20. Known limitations
+## 17. Known limitations
 
 - Guest mode is per-browser, not a production identity system.
-- Demo RLS policies are permissive; application-level filters are the real isolation in demo mode.
 - RAG retrieval is TF-IDF (reliable locally), not a hosted vector DB.
 - The mastery classifier is trained on synthetic data for bootstrapping only.
 - Groq/xAI rate limits can fail AI endpoints; the gateway retries then surfaces the error.
