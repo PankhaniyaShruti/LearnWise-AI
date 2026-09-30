@@ -220,7 +220,6 @@ Pass keys via environment or an untracked `.env`.
 | POST | `/api/practice/adaptive` | Adaptive quiz |
 | POST | `/api/flashcards` | Flashcards |
 | POST | `/api/learning-path` | Path |
-| POST | `/api/study-plan` | Exam plan |
 | POST | `/api/documents` | Upload PDF/TXT |
 | POST | `/api/rag/ask` | Grounded question |
 | POST | `/api/agent` | Orchestrator |
